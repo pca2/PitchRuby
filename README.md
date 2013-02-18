@@ -7,11 +7,11 @@ Originally inspired by bawish's [Rdiofork](https://github.com/bawish/Rdiofork).
 
 This script is a work in progress and doesn't actually work yet, so stay tuned.
 
-== To Do
+## To Do
 
 Biggest item right now is working with Rdio api. There's the official [Rdio Ruby client](https://github.com/rdio/rdio-simple/tree/master/ruby) but it only works with Ruby 1.8. There's [rdio_api](https://github.com/anilv/rdio_api) but it doesn't include an oauth flow. I'm new to managing oauth (and everything else) so I'm still trying to figure that out.
 
-== Planned  Workflow
+## Planned  Workflow
 
 1. Grab items RSS feed.
 
