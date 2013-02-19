@@ -1,6 +1,6 @@
 require 'rss'
 require 'open-uri'
-
+require 'csv'
 #Grab info from RSS feed
 artists = []
 albums = []
@@ -19,3 +19,5 @@ open(url) do |rss|
 end
 #Combine two arrays into hash
 listing = Hash[*artists.zip(albums).flatten]
+CSV.open("data.csv", "wb") {|csv| listing.to_a.each {|elem| csv << elem}}
+
