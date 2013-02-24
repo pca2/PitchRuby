@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #quick script to obtain permenant Rdio token
 
 require './rdio'
@@ -12,5 +13,5 @@ print 'Then enter the code: '
 verifier = gets.strip
 rdio.complete_authentication(verifier)
 
-puts "RDIO_TOKEN " + rdio.token[0]
-puts "RDIO_TOKEN_SECRET " + rdio.token[1]
+puts "RDIO_TOKEN: " + rdio.token[0]
+puts "RDIO_TOKEN_SECRET: " + rdio.token[1]
