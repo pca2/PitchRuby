@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-#quick script to obtain permenant Rdio token
+#quick script to obtain permanent Rdio token
 
 require './rdio'
 require './credentials_and_settings'
