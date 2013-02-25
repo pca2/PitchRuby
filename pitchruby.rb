@@ -8,7 +8,7 @@ require './rdio.rb'
 # Make sure redis is running first with redis-server
 @redis = Redis.new
 @rdio = Rdio.new([RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET],
-                [RDIO_TOKEN, RDIO_TOKEN_SECRET])
+                 [RDIO_TOKEN, RDIO_TOKEN_SECRET])
 
 def set_streamable(id, state)
   if state == true then
@@ -23,8 +23,8 @@ def find_album(artist, title)
   # never_or will ensure that we only get matches for the exact artist
   # and title combination
   search = @rdio.call("search", { "query" => "#{artist} #{title}",
-                                 "types" => "Album",
-                                 "never_or" => "true" })
+                      "types" => "Album",
+                      "never_or" => "true" })
 
   # If our search works at all, continue
   if search["status"] == "ok"
@@ -51,10 +51,7 @@ def store_album(artist, title)
   @redis.set("albums:#{artist}:#{title}", id)
 
   # Create a hash for this album with the artist and the title
-  @redis.hmset( "albums:#{id}",
-               "id", id,
-               "artist", artist,
-               "title", title )
+  @redis.hmset( "albums:#{id}", "id", id, "artist", artist, "title", title )
 
   # Initially add it to the unavailable albums list
   set_streamable(id, false)
@@ -76,7 +73,7 @@ def add_album(id)
 
     # The playlist key needs the value of "key" from "getPlaylists"
     resp = @rdio.call("addToPlaylist", { "playlist" => RDIO_PLAYLIST_KEY,
-                     "tracks" => res[0]["trackKeys"].join(",") })
+                      "tracks" => res[0]["trackKeys"].join(",") })
 
     if resp["status"] == "ok"
       puts "Oh yeah we done added #{artist}: #{title}!"
