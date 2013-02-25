@@ -1,30 +1,38 @@
 PitchRuby
 =========
 
-A Ruby script for parsing Pitchfork's best new albums RSS feed and adding songs to an Rdio playlist.
+A Ruby script for parsing Pitchfork's best new albums RSS feed and adding songs
+to an Rdio playlist.
 
 Originally inspired by bawish's [Rdiofork](https://github.com/bawish/Rdiofork).
 
-This script is a work in progress and doesn't actually work yet, so stay tuned.
+## Data structures
 
-## To Do
+Since this was in part an excuse for me to learn redis, I tried to plan out
+storing data based not only on what information I want to keep, but on how I
+wanted to query it later.
 
-Biggest item right now is working with Rdio api. There's the official [Rdio Ruby client](https://github.com/rdio/rdio-simple/tree/master/ruby) but it only works with Ruby 1.8. There's [rdio_api](https://github.com/anilv/rdio_api) but it doesn't include an oauth flow. I'm new to managing oauth (and everything else) so I'm still trying to figure that out.
+1. Key => value to keep track of unique ids for each album: `albums:nextID`
+  * We can get the next available ID with `redis.incr('albums:nextID')`
+  * Example: `albums:nextID = 1`
+2. Most importantly, I'm storing a redis hash of albums: `albums:#{id}` where id is from `albums:nextID`
+  * We want to store the id, the artist, and the album title
+  * Example: `albums:1 = { "id" => 1, "artist" => "Purity Ring", "title" =>
+    "Shrines" }`
 
-## Planned  Workflow
+## Storage based on queries
 
-1. Grab items RSS feed.
+### What was the most recently parsed RSS post?
+This is just a simple key => value which stores the unix timestamp of the latest
+post as the key `albums:latest_post`.
+  * Example: `albums:latest_post = 1361822312`
 
-2. Parse artists and albums into separate arrays, then combine arrays into one hash.
+### Do we already have an entry for this artist + album?
+Redis key => value, where the key is `albums:artist:title` and the value is
+the id of the album in the `albums:id` hash
+  * Example: `albums:Purity Ring:Shrines = 1`
 
-At the moment that's as far as I've gotten.
+### Is this album available for streaming on rdio?
+Redis "set" of unavailable albums: `albums:unavailable`
+  * Example: `albums:unavailable = [ 1, 4, 8 ]`
 
-3. query Rdio for each artist in hash, a list of albums will be returned.
-
-4. Iterate through album titles, checking for albums in hash.
-
-4. If album matches one in the hash, get track listing.
- 
-5. Add tracks to top of playlist.
-
-6. Iterate through hash and check if albums are available. If they become available add them to playlist, if they cease to be available remove them.
