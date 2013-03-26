@@ -36,3 +36,5 @@ the id of the album in the `albums:id` hash
 Redis "set" of unavailable albums: `albums:unavailable`
   * Example: `albums:unavailable = [ 1, 4, 8 ]`
 
+## To Do
+  * Add method to make new tracks first in playlist
