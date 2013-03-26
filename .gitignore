@@ -1,0 +1,10 @@
+my_credentials_and_settings.rb
+/log/*.log
+/tmp
+doc/
+*.swp 
+*~ 
+.project 
+.DS_Store 
+.idea 
+

@@ -90,7 +90,7 @@ def add_album(id)
 end
 
 # Grab info from RSS feed
-url = 'http://feeds2.feedburner.com/PitchforkBestNewAlbums'
+url = 'http://pitchfork.com/rss/reviews/best/albums/'
 
 # Get the most recent post we processed from the db
 latest_post = @redis.get("albums:latest_post").to_i
