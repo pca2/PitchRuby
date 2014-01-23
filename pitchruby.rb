@@ -1,20 +1,34 @@
 #!/usr/bin/env ruby
 require 'rss'
 require 'open-uri'
-require 'redis'
+require 'data_mapper'
 require './my_credentials_and_settings.rb'
 require './rdio.rb'
 
+DataMapper::setup(:default, "sqlite://#{Dir.pwd}//pitchruby.db")
+
+class Album
+  include DataMapper::Resource
+  property :id, Serial
+  property :artist, String
+  property :album, String
+  property :canStream, Boolean
+  property :pubDate, DateTime
+  property :created_at, DateTime
+end
+
+DataMapper.finalize.auto_upgrade!
+
+
 # Make sure redis is running first with redis-server
-@redis = Redis.new
 @rdio = Rdio.new([RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET],
                  [RDIO_TOKEN, RDIO_TOKEN_SECRET])
 
-def set_streamable(id, state)
+def set_streamable(artist, album, state)
   if state == true then
-    @redis.srem("albums:unavailable", id)
+Album.first(:artist => artist, :album => album).update(:canStream => true)
   else
-    @redis.sadd("albums:unavailable", id)
+Album.first(:artist => artist, :album => album).update(:canStream => false)
   end
 end
 
@@ -44,21 +58,11 @@ def find_album(artist, title)
 end
 
 def store_album(artist, title)
-  # Unique id for key
-  id = @redis.incr("albums:nextID")
-
-  # Add this artist:album key for lookups
-  @redis.set("albums:#{artist}:#{title}", id)
-
-  # Create a hash for this album with the artist and the title
-  @redis.hmset( "albums:#{id}", "id", id, "artist", artist, "title", title )
-
-  # Initially add it to the unavailable albums list
-  set_streamable(id, false)
-
+  Album.first(:artist => artist, :album => album).update(:canStream => false)
   return id
 end
 
+#Fix this method
 def add_album(id)
   # Find that album
   album = @redis.hgetall("albums:#{id}")
@@ -93,7 +97,7 @@ end
 url = 'http://pitchfork.com/rss/reviews/best/albums/'
 
 # Get the most recent post we processed from the db
-latest_post = @redis.get("albums:latest_post").to_i
+latest_post = repository(:default).adapter.select("select pub_date from albums where pub_date = (select max(pub_date) from albums)")
 
 # Here's where the feed parsing goes down
 open(url) do |rss|
@@ -103,7 +107,7 @@ open(url) do |rss|
   feed.items.each do |item|
 
     # Get the time of posting and convert it to unix timestamp
-    post_time = item.pubDate.to_i
+    post_time = item.pubDate
 
     # Loop until we hit the latest post we did last time
     break if post_time == latest_post
@@ -118,6 +122,7 @@ open(url) do |rss|
 
     # If our set of artists or our set of artist:albums doesn't contain this
     # artist or album respectively, then we know we can add it!
+    ###FIX THIS
     if not @redis.exists("albums:#{artist}:#{album}") then
       id = store_album(artist, album)
       add_album(id)
