@@ -58,16 +58,15 @@ def find_album(artist, title)
 end
 
 def store_album(artist, title)
-  Album.first(:artist => artist, :album => album).update(:canStream => false)
-  return id
+  Album.create(:artist => artist, :album => title).update(:canStream => false)
+  return Album.last.id
 end
 
-#Fix this method
 def add_album(id)
   # Find that album
-  album = @redis.hgetall("albums:#{id}")
-  artist = album['artist']
-  title = album['title']
+  album_to_add = Album.get(id)
+  artist = album_to_add.artist
+  title = album_to_add.album
 
   res = find_album(artist, title)
   if res.length > 0 && res[0]["canStream"] == true then
@@ -80,9 +79,9 @@ def add_album(id)
                       "tracks" => res[0]["trackKeys"].join(",") })
 
     if resp["status"] == "ok"
-      puts "Oh yeah we done added #{artist}: #{title}!"
+      puts "Oh yeah we done added #{artist}: #{title} to the playlist"
     else
-      puts "Adding that #{title} didn't work"
+      puts "Adding #{title} didn't work"
       puts resp
     end
 
@@ -120,10 +119,8 @@ open(url) do |rss|
     # I don't care if it's an EP, but Rdio doesn't usually append this
     album.gsub!(" EP", "")
 
-    # If our set of artists or our set of artist:albums doesn't contain this
-    # artist or album respectively, then we know we can add it!
-    ###FIX THIS
-    if not @redis.exists("albums:#{artist}:#{album}") then
+    # Chck if artist and album combo is in in DB if not then store in DB and add to playlist
+    if Album.first(:artist => "#{artist}", :album => "#{album}").nil? then
       id = store_album(artist, album)
       add_album(id)
     end
