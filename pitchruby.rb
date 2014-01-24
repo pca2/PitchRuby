@@ -9,10 +9,10 @@ DataMapper::setup(:default, "sqlite://#{Dir.pwd}//pitchruby.db")
 
 class Album
   include DataMapper::Resource
-  property :id, Serial
-  property :artist, String
-  property :album, String
-  property :canStream, Boolean
+  property :id, Serial, :required => true
+  property :artist, String, :required => true
+  property :album, String, :required => true
+  property :canStream, Boolean, :required => true
   property :pubDate, DateTime
   property :created_at, DateTime
 end
@@ -20,19 +20,19 @@ end
 DataMapper.finalize.auto_upgrade!
 
 
-# Make sure redis is running first with redis-server
 @rdio = Rdio.new([RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET],
                  [RDIO_TOKEN, RDIO_TOKEN_SECRET])
 
-def set_streamable(artist, album, state)
+def set_streamable(id, state)
   if state == true then
-Album.first(:artist => artist, :album => album).update(:canStream => true)
+Album.get(id).update(:canStream => true)
   else
-Album.first(:artist => artist, :album => album).update(:canStream => false)
+Album.get(id).update(:canStream => false)
   end
 end
 
 def find_album(artist, title)
+  #Finds album on Rdio
   # Search for "artist title"
   # never_or will ensure that we only get matches for the exact artist
   # and title combination
@@ -58,11 +58,13 @@ def find_album(artist, title)
 end
 
 def store_album(artist, title)
+  #stores album in DB
   Album.create(:artist => artist, :album => title).update(:canStream => false)
   return Album.last.id
 end
 
 def add_album(id)
+  #Adds album to playlist
   # Find that album
   album_to_add = Album.get(id)
   artist = album_to_add.artist
@@ -92,6 +94,9 @@ def add_album(id)
   end
 end
 
+#END of methods, begin script
+
+
 # Grab info from RSS feed
 url = 'http://pitchfork.com/rss/reviews/best/albums/'
 
@@ -105,7 +110,7 @@ open(url) do |rss|
   # Iterate through items
   feed.items.each do |item|
 
-    # Get the time of posting and convert it to unix timestamp
+    # Get the time of posting 
     post_time = item.pubDate
 
     # Loop until we hit the latest post we did last time
@@ -126,19 +131,15 @@ open(url) do |rss|
     end
   end
   # Set the latest_post to the first post in the feed
-  @redis.set("albums:latest_post", feed.items[0].pubDate.to_i)
+  # @redis.set("albums:latest_post", feed.items[0].pubDate.to_i)
 end
 
 # Check our unavailable albums for availability
 puts "Checking if our unavailable albums have become available..."
-unavail = @redis.smembers("albums:unavailable")
+unavail = repository(:default).adapter.select("select id from albums where can_stream = 'f' " )
 unavail.each do |u|
   add_album(u)
 end
 
-u_tally = @redis.scard("albums:unavailable")
+u_tally = Album.count(:canStream => false)
 puts "There are currently #{u_tally} albums still unavailable on Rdio"
-
-# I could mess with redis settings to make it save more frequently
-# or I could just explicitly call save...
-@redis.save
