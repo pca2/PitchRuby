@@ -75,10 +75,21 @@ def add_album(id)
     # Save this album to the set of available albums
     set_streamable(id, true)
     puts "#{artist}: #{title} is available!"
+    new_album_tracks = res[0]["trackKeys"]
 
-    # The playlist key needs the value of "key" from "getPlaylists"
-    resp = @rdio.call("addToPlaylist", { "playlist" => RDIO_PLAYLIST_KEY,
-                      "tracks" => res[0]["trackKeys"].join(",") })
+    #Get current track listing of playlist as plist_tracks array
+    plist_search = @rdio.call("get", {"keys" => RDIO_PLAYLIST_KEY, "extras" => "tracks"})
+    plist_tracks = []
+    plist_search["result"]RDIO_PLAYLIST_KEY["tracks"].each { |x| plist_tracks.push(x["key"]) }
+
+    #add new album to playlist. API only allows for adding it to the end of the list.
+    @rdio.call("addToPlaylist", { "playlist" => RDIO_PLAYLIST_KEY,
+                      "tracks" => new_album_tracks.join(",") })
+    #Create new tracklist order by concatenating original track listing to the end of list of new albums tracks
+    new_plist_tracks = new_album_tracks.concat(plist_tracks)
+    #save new tracklist order
+    resp = @rdio.call("setPlaylistOrder", {"playlist" => RDIO_PLAYLIST_KEY,
+      "tracks" => new_plist_tracks.join(",") })
 
     if resp["status"] == "ok"
       puts "Oh yeah we done added #{artist}: #{title} to the playlist"
