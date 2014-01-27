@@ -59,7 +59,7 @@ end
 
 def store_album(artist, title)
   #stores album in DB
-  Album.create(:artist => artist, :album => title).update(:canStream => false)
+  Album.create(:artist => artist, :album => title, :canStream => false)
   return Album.last.id
 end
 
@@ -80,7 +80,7 @@ def add_album(id)
     #Get current track listing of playlist as plist_tracks array
     plist_search = @rdio.call("get", {"keys" => RDIO_PLAYLIST_KEY, "extras" => "tracks"})
     plist_tracks = []
-    plist_search["result"]RDIO_PLAYLIST_KEY["tracks"].each { |x| plist_tracks.push(x["key"]) }
+    plist_search["result"][RDIO_PLAYLIST_KEY]["tracks"].each { |x| plist_tracks.push(x["key"]) }
 
     #add new album to playlist. API only allows for adding it to the end of the list.
     @rdio.call("addToPlaylist", { "playlist" => RDIO_PLAYLIST_KEY,
