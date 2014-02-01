@@ -1,11 +1,14 @@
 #!/usr/bin/env ruby
+#A simple script to parse the RSS feed of Pitchfork's Best New Albums feature and attempt to add them to an Rdio playlist if available
+#Authors: Alex Brown (alexpbrown) & Carleton Atwater (pca2)
+$:.unshift File.expand_path(File.dirname(__FILE__)) #add containing folder to load path
+DIR = File.expand_path(File.dirname(__FILE__)) #path to containing folder
 require 'rss'
 require 'open-uri'
 require 'data_mapper'
-require './my_credentials_and_settings.rb'
-require './rdio.rb'
-
-DataMapper::setup(:default, "sqlite://#{Dir.pwd}//pitchruby.db")
+require 'my_credentials_and_settings.rb'
+require 'rdio.rb'
+DataMapper::setup(:default, "sqlite://#{DIR}/pitchruby.db")
 
 class Album
   include DataMapper::Resource
@@ -156,3 +159,4 @@ end
 
 u_tally = Album.count(:canStream => false)
 puts "There are currently #{u_tally} albums still unavailable on Rdio"
+  
