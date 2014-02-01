@@ -112,8 +112,7 @@ end
 url = 'http://pitchfork.com/rss/reviews/best/albums/'
 
 # Get the most recent post we processed from the db
-latest_post = repository(:default).adapter.select("select pub_date from albums where pub_date = (select max(pub_date) from albums)")
-
+latest_post = Album.max(:pubDate).to_time
 # Here's where the feed parsing goes down
 open(url) do |rss|
   feed = RSS::Parser.parse(rss)
@@ -121,11 +120,14 @@ open(url) do |rss|
   # Iterate through items
   feed.items.each do |item|
 
-    # Get the time of posting 
+   # Get the time of posting
     post_time = item.pubDate
 
     # Loop until we hit the latest post we did last time
-    break if post_time == latest_post
+    if post_time == latest_post
+      puts "No new music :("
+      break
+    end
 
     puts "New music, woo!"
 
