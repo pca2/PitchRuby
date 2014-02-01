@@ -10,6 +10,6 @@ This version of the script stores the parsed album data in a sqlite file. It use
 
 New albums are added to the top of the playlist. Albums that are not available are stored in the DB and checked for availability each time the script is run. Currently there is no way to ensure that only new albums from the current year are added to the playlist. That feature may be added in future versions, if we ever get around to it.
 
-The rdio.rb and om.rb files are manually included here because we ran into some issues with the [official rdio Ruby wrapper](https://github.com/rdio/rdio-simple/tree/master/ruby) versus spudtrooper's [3rd-prty solution](http://rubygems.org/gems/rdio).  
+The rdio.rb and om.rb files are manually included here because we ran into some issues with the [official Rdio Ruby wrapper](https://github.com/rdio/rdio-simple/tree/master/ruby) versus spudtrooper's [3rd-prty solution](http://rubygems.org/gems/rdio).  
 
-The rdio playlist for 2014 is available [here](http://www.rdio.com/people/carleton/playlists/8006024/Pitchfork_Best_New_Albums_2014/).
+The Rdio playlist for 2014 is available [here](http://www.rdio.com/people/carleton/playlists/8006024/Pitchfork_Best_New_Albums_2014/).
