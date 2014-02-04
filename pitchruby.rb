@@ -16,7 +16,7 @@ class Album
   property :artist, String, :required => true
   property :album, String, :required => true
   property :canStream, Boolean, :required => true
-  property :pubDate, DateTime
+  property :pubDate, Time
   property :created_at, DateTime
 end
 
@@ -60,9 +60,9 @@ def find_album(artist, title)
   end
 end
 
-def store_album(artist, title)
+def store_album(artist, title, post_time)
   #stores album in DB
-  Album.create(:artist => artist, :album => title, :canStream => false)
+  Album.create(:artist => artist, :album => title, :pubDate => post_time,  :canStream => false)
   return Album.last.id
 end
 
@@ -142,12 +142,10 @@ open(url) do |rss|
 
     # Chck if artist and album combo is in in DB if not then store in DB and add to playlist
     if Album.first(:artist => "#{artist}", :album => "#{album}").nil? then
-      id = store_album(artist, album)
+      id = store_album(artist, album, post_time)
       add_album(id)
     end
   end
-  # Set the latest_post to the first post in the feed
-  # @redis.set("albums:latest_post", feed.items[0].pubDate.to_i)
 end
 
 # Check our unavailable albums for availability
