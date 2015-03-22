@@ -14,4 +14,4 @@ The rdio.rb and om.rb files are manually included here because we ran into some 
 
 Rdio playlists: 
 - [2014](http://www.rdio.com/people/carleton/playlists/8006024/Pitchfork_Best_New_Albums_2014/)
-- [nuih](http://www.rdio.com/people/carleton/playlists/13071415/Pitchfork_Best_New_Albums_2015/)
+- [2015](http://www.rdio.com/people/carleton/playlists/13071415/Pitchfork_Best_New_Albums_2015/)
