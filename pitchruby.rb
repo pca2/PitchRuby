@@ -51,7 +51,7 @@ end
 
 def store_album(artist, title, post_time)
   #stores album in DB
-  @album.insert(:artist => artist, :album => title, :pub_date => post_time,  :canStream => false, :created_at => @timestamp)
+  @album.insert(:artist => artist, :album => title, :pub_date => post_time,  :can_stream => false, :created_at => @timestamp)
   return @album.max(:id)
 end
 
