@@ -5,32 +5,21 @@ $:.unshift File.expand_path(File.dirname(__FILE__)) #add containing folder to lo
 DIR = File.expand_path(File.dirname(__FILE__)) #path to containing folder
 require 'rss'
 require 'open-uri'
-require 'data_mapper'
+require 'sequel'
 require 'my_credentials_and_settings.rb'
 require 'rdio.rb'
-DataMapper::setup(:default, "sqlite://#{DIR}/pitchruby.db")
-
-class Album
-  include DataMapper::Resource
-  property :id, Serial, :required => true
-  property :artist, String, :required => true
-  property :album, String, :required => true
-  property :canStream, Boolean, :required => true
-  property :pubDate, Time
-  property :created_at, DateTime
-end
-
-DataMapper.finalize.auto_upgrade!
-
+@timestamp = Time.now
+DB = Sequel.sqlite("#{DIR}/pitchruby.db")
+@album = DB[:albums]
 
 @rdio = Rdio.new([RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET],
                  [RDIO_TOKEN, RDIO_TOKEN_SECRET])
 
 def set_streamable(id, state)
   if state == true then
-Album.get(id).update(:canStream => true)
+@album.where(:id => id).update(:can_stream => true)
   else
-Album.get(id).update(:canStream => false)
+@album.where(:id => id).update(:can_stream => false)
   end
 end
 
@@ -62,16 +51,16 @@ end
 
 def store_album(artist, title, post_time)
   #stores album in DB
-  Album.create(:artist => artist, :album => title, :pubDate => post_time,  :canStream => false)
-  return Album.last.id
+  @album.insert(:artist => artist, :album => title, :pub_date => post_time,  :canStream => false, :created_at => @timestamp)
+  return @album.max(:id)
 end
 
 def add_album(id)
   #Adds album to playlist
   # Find that album
-  album_to_add = Album.get(id)
-  artist = album_to_add.artist
-  title = album_to_add.album
+  album_to_add = @album.where(:id => id).first
+  artist = album_to_add[:artist]
+  title = album_to_add[:album]
 
   res = find_album(artist, title)
   if res.length > 0 && res[0]["canStream"] == true then
@@ -115,7 +104,7 @@ end
 url = 'http://pitchfork.com/rss/reviews/best/albums/'
 
 # Get the most recent post we processed from the db
-latest_post = Album.max(:pubDate).to_time
+latest_post = Time.parse(@album.max(:pub_date))
 # Here's where the feed parsing goes down
 open(url) do |rss|
   feed = RSS::Parser.parse(rss)
@@ -141,7 +130,7 @@ open(url) do |rss|
     album.gsub!(" EP", "")
 
     # Chck if artist and album combo is in in DB if not then store in DB and add to playlist
-    if Album.first(:artist => "#{artist}", :album => "#{album}").nil? then
+    if @album.first(:artist => "#{artist}", :album => "#{album}").nil? then
       id = store_album(artist, album, post_time)
       add_album(id)
     end
@@ -150,11 +139,11 @@ end
 
 # Check our unavailable albums for availability
 puts "Checking if our unavailable albums have become available..."
-unavail = repository(:default).adapter.select("select id from albums where can_stream = 'f' " )
+unavail = DB.fetch("select id from albums where can_stream = 'f' " ).map(:id)
 unavail.each do |u|
   add_album(u)
 end
 
-u_tally = Album.count(:canStream => false)
+u_tally = @album.count(:can_stream => false).to_s
 puts "There are currently #{u_tally} albums still unavailable on Rdio"
   
